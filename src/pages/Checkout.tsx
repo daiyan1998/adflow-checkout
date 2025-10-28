@@ -11,7 +11,7 @@ import { Minus, Plus, Check, Star, ShieldCheck, Truck, RotateCcw, Lock, Package,
 
 const Checkout = () => {
   const { toast } = useToast();
-  const product = storage.getProduct();
+  const product = storage.getActiveProduct() || storage.getProducts()[0];
   
   const [quantity, setQuantity] = useState(1);
   const [formData, setFormData] = useState({
@@ -37,7 +37,7 @@ const Checkout = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const originalPrice = Math.round(product.price * 1.5);
+  const originalPrice = product.originalPrice || Math.round(product.price * 1.5);
   const discount = Math.round(((originalPrice - product.price) / originalPrice) * 100);
   const totalPrice = product.price * quantity;
   const totalOriginalPrice = originalPrice * quantity;
@@ -137,7 +137,10 @@ const Checkout = () => {
                     <span className="text-lg text-muted-foreground">Today Only!</span>
                   </div>
                 </div>
-                <p className="text-muted-foreground mb-6">{product.description}</p>
+                <div 
+                  className="text-muted-foreground mb-6 prose prose-sm"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <Package className="w-4 h-4" />
                   <span>Only 23 left in stock!</span>

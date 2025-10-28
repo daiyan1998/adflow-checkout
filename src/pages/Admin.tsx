@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
-import { storage, Product, Order } from "@/lib/storage";
+import { storage, Order } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, LogOut } from "lucide-react";
+import { AdminProducts } from "./AdminProducts";
 
 const Admin = () => {
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [product, setProduct] = useState<Product>(storage.getProduct());
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
@@ -42,11 +41,6 @@ const Admin = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setPassword("");
-  };
-
-  const handleSaveProduct = () => {
-    storage.saveProduct(product);
-    toast({ title: "Saved!", description: "Product updated successfully" });
   };
 
   const handleToggleProcessed = (orderId: string, currentStatus: boolean) => {
@@ -103,11 +97,15 @@ const Admin = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="orders" className="space-y-6">
+        <Tabs defaultValue="products" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
-            <TabsTrigger value="product">Product Settings</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="products">
+            <AdminProducts />
+          </TabsContent>
 
           <TabsContent value="orders" className="space-y-4">
             {orders.length === 0 ? (
@@ -151,56 +149,6 @@ const Admin = () => {
                 </Card>
               ))
             )}
-          </TabsContent>
-
-          <TabsContent value="product">
-            <Card className="p-6">
-              <h2 className="text-xl font-bold mb-6">Edit Product</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Product Title</Label>
-                  <Input
-                    id="title"
-                    value={product.title}
-                    onChange={(e) => setProduct({ ...product, title: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={product.description}
-                    onChange={(e) => setProduct({ ...product, description: e.target.value })}
-                    rows={4}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="price">Price ($)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={product.price}
-                    onChange={(e) => setProduct({ ...product, price: Number(e.target.value) })}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="image">Image URL</Label>
-                  <Input
-                    id="image"
-                    value={product.images[0]}
-                    onChange={(e) => setProduct({ ...product, images: [e.target.value] })}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-
-                <Button onClick={handleSaveProduct} className="w-full">
-                  Save Product
-                </Button>
-              </div>
-            </Card>
           </TabsContent>
         </Tabs>
       </div>

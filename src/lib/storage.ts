@@ -1,9 +1,12 @@
 export interface Product {
   id: string;
   title: string;
-  description: string;
+  description: string; // Now stores HTML from Tiptap
   price: number;
+  originalPrice?: number;
   images: string[];
+  active: boolean; // Which product to show on checkout
+  createdAt: string;
 }
 
 export interface Order {
@@ -18,7 +21,7 @@ export interface Order {
   processed: boolean;
 }
 
-const PRODUCT_KEY = 'checkout_product';
+const PRODUCTS_KEY = 'checkout_products';
 const ORDERS_KEY = 'checkout_orders';
 const ADMIN_KEY = 'checkout_admin_password';
 
@@ -26,20 +29,63 @@ const ADMIN_KEY = 'checkout_admin_password';
 const DEFAULT_PRODUCT: Product = {
   id: '1',
   title: 'Premium Product',
-  description: 'High-quality product that solves your needs perfectly. Features include durability, great design, and amazing value.',
+  description: '<p>High-quality product that solves your needs perfectly. Features include durability, great design, and amazing value.</p>',
   price: 299,
-  images: ['/placeholder.svg']
+  originalPrice: 499,
+  images: ['/placeholder.svg'],
+  active: true,
+  createdAt: new Date().toISOString()
 };
 
 export const storage = {
-  // Product
-  getProduct: (): Product => {
-    const stored = localStorage.getItem(PRODUCT_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_PRODUCT;
+  // Products
+  getProducts: (): Product[] => {
+    const stored = localStorage.getItem(PRODUCTS_KEY);
+    return stored ? JSON.parse(stored) : [DEFAULT_PRODUCT];
+  },
+
+  getProduct: (id: string): Product | undefined => {
+    const products = storage.getProducts();
+    return products.find(p => p.id === id);
+  },
+
+  getActiveProduct: (): Product | undefined => {
+    const products = storage.getProducts();
+    return products.find(p => p.active);
   },
   
-  saveProduct: (product: Product) => {
-    localStorage.setItem(PRODUCT_KEY, JSON.stringify(product));
+  addProduct: (product: Omit<Product, 'id' | 'createdAt'>): Product => {
+    const products = storage.getProducts();
+    const newProduct: Product = {
+      ...product,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
+    products.push(newProduct);
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+    return newProduct;
+  },
+
+  updateProduct: (id: string, updates: Partial<Product>) => {
+    const products = storage.getProducts();
+    const index = products.findIndex(p => p.id === id);
+    if (index !== -1) {
+      products[index] = { ...products[index], ...updates };
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+    }
+  },
+
+  deleteProduct: (id: string) => {
+    const products = storage.getProducts().filter(p => p.id !== id);
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+  },
+
+  setActiveProduct: (id: string) => {
+    const products = storage.getProducts();
+    products.forEach(p => {
+      p.active = p.id === id;
+    });
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
   },
 
   // Orders
